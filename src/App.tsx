@@ -218,7 +218,7 @@ const formatStep = (step: PathStep) => {
   const params = Object.entries(step)
     .filter(([key, value]) => {
       const excluded =
-        ["type", "coorOpt", "fill-rule"].includes(key) || key.endsWith("_unit");
+        ["type", "fill-rule"].includes(key) || key.endsWith("_unit");
       return !excluded && value != null && value !== "";
     })
     .map(([key]) => unitCheck(step, key))
@@ -429,18 +429,30 @@ const App = () => {
   const handlePathAction = (index: number, action: string) => {
     setPathState((prev) => {
       const next = [...prev];
+      if (index === 0) {
+        if (action === "delete" && prev.length === 1) {
+          next.splice(index, 1);
+          return next;
+        }
+        return prev;
+      }
+
       if (action === "delete") {
         next.splice(index, 1);
         return next;
       }
-      if (action === "up" && index > 0) {
+
+      if (action === "up") {
+        if (index <= 1) return prev;
         [next[index - 1], next[index]] = [next[index], next[index - 1]];
         return next;
       }
+
       if (action === "down" && index < next.length - 1) {
         [next[index], next[index + 1]] = [next[index + 1], next[index]];
         return next;
       }
+
       return prev;
     });
   };
@@ -715,7 +727,7 @@ const App = () => {
                         handleUnitChange(fieldKey, event.target.value)
                       }
                     >
-                      {UNITS.map((unit) => (
+                      {(fieldKey === "rotate" ? ["deg"] : UNITS).map((unit) => (
                         <option key={unit} value={unit}>
                           {unit}
                         </option>
@@ -797,7 +809,7 @@ const App = () => {
                       data-action="down"
                       aria-label="Action: Move Down"
                       title="Action: Move Down"
-                      disabled={isLast}
+                      disabled={isLast || isFirst}
                       onClick={() => handlePathAction(index, "down")}
                     >
                       <i className="fas fa-arrow-down" aria-hidden="true" />

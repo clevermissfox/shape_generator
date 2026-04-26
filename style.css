@@ -87,7 +87,6 @@
     & code {
       margin-block-start: var(--spacing-050, 0.5em);
       white-space: pre-wrap;
-      /* word-break: break-all; */
       font-size: clamp(0.9rem, 1rem + (-1 * 3cqb), 1.1rem);
     } /* END & code */
   } /* END output */

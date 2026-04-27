@@ -52,6 +52,7 @@
 
   code {
     display: inline-block;
+    font-size: 0.9em;
   }
 
   h1 {
@@ -103,8 +104,11 @@
 
     &
       :is(
+        .custom-select:has([data-field="cp1Origin"], [data-field="cp2Origin"]),
         button.btn-add_path:not(:has(+ .btn-reset)),
-        .input-wrapper:has([data-field]):is(:nth-child(odd)):has(+ .btn),
+        :is(.custom-select, .input-wrapper):has([data-field]):is(
+            :nth-child(odd)
+          ):has(+ .btn),
         .custom-select:has([id="select-command"]):not(
             :has(
               + .custom-select [id="select-coor-opt"],

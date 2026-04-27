@@ -43,6 +43,11 @@ const FIELD_TYPES: Record<string, FieldConfig> = {
     label: "Control Point Y",
     required: true,
   },
+  cp1Origin: {
+    type: "select",
+    options: ["start", "end", "origin"],
+    label: "Control Point Relative To",
+  },
   cpx2: {
     type: "number",
     defaultUnit: "%",
@@ -54,6 +59,11 @@ const FIELD_TYPES: Record<string, FieldConfig> = {
     defaultUnit: "%",
     label: "Control Point Y 2",
     required: true,
+  },
+  cp2Origin: {
+    type: "select",
+    options: ["start", "end", "origin"],
+    label: "Control Point 2 Relative To",
   },
   radiusX: {
     type: "number",
@@ -94,12 +104,21 @@ const COMMAND_CONFIG: Record<string, CommandConfig> = {
   },
   "curve-quad": {
     label: "Curve (Quad)",
-    fields: ["x", "y", "cpx1", "cpy1"],
+    fields: ["x", "y", "cpx1", "cpy1", "cp1Origin"],
     hasRelative: true,
   },
   "curve-cubic": {
     label: "Curve (Cubic)",
-    fields: ["x", "y", "cpx1", "cpy1", "cpx2", "cpy2"],
+    fields: [
+      "x",
+      "y",
+      "cpx1",
+      "cpy1",
+      "cp1Origin",
+      "cpx2",
+      "cpy2",
+      "cp2Origin",
+    ],
     hasRelative: true,
   },
   smooth: {
@@ -109,7 +128,7 @@ const COMMAND_CONFIG: Record<string, CommandConfig> = {
   },
   "smooth-cubic": {
     label: "Smooth (Cubic)",
-    fields: ["x", "y", "cpx2", "cpy2"],
+    fields: ["x", "y", "cpx2", "cpy2", "cp2Origin"],
     hasRelative: true,
   },
   arc: {
@@ -130,11 +149,20 @@ const COMMAND_CONFIG: Record<string, CommandConfig> = {
 
 const TIPS = [
   `Warning: <code>fill-rule</code> is not supported in <code>offset-path</code> and using it invalidates the property.`,
-  `Tip: Drag the <em>Path History</em> if it is in the way. Or use it to edit, reorder, or delete your step values.`,
+  `Tip: Drag the <em>Path History</em> if it is in the way. Or use it to edit, reorder, or delete your step values.<cite>
+  <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/basic-shape/shape">
+    [MDN]
+  </a>
+</cite>`,
   `Tip: Use custom units to use keywords like <code>center</code>, <code>start</code>, container query units, custom properties, or anchor positioning <code>calc(anchor(left) + 1rem)</code>`,
   `Tip: Apply the <code>shape()</code> function to <code>offset-path</code>, <code>clip-path</code>, or anywhere you want to define a path in plain English (versus path shorthand).`,
   `Tip: If your mobile keyboard isn't rendering a "-" to use negative values, choose <code>custom</code> unit and type your negative there. (e.g. <code>-10px</code>)`,
-  `Report bug or request feature <a href="mailto:edicodesigner+shape_generator@gmail.com">via email</a>`,
+  `Tip: If a coordinate in a <code>&lt;coordinate-pair&gt;</code> is specified as a percentage, the value is calculated relative to the respective width or height of the reference box. <cite>
+  <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/basic-shape/shape">
+    [MDN]
+  </a>
+</cite>`,
+  `Report bug or request feature <a href="mailto:edicodesigner+shape_generator@gmail.com">via email</a>. Find this projects <a target="_blank" href="https://github.com/clevermissfox/shape_generator">GitHub Repository</a>`,
 ];
 
 const DEFAULT_UNIT_PREFERENCES: Record<string, string> = {
@@ -184,6 +212,18 @@ const unitCheck = (step: PathStep, field: string) => {
   return `${textValue}${unit}`;
 };
 
+/**
+ * Determines the relative origin keyword for a control point.
+ * Filters out the default 'start' value to keep the CSS output concise.
+ * @param {Object} step - The current path step object.
+ * @param {string} field - The specific origin field key (e.g., 'cp1Origin').
+ * @returns {string} The formatted " from [keyword]" string or an empty string.
+ */
+function getOrigin(step: PathStep, field: string) {
+  const val = step[field];
+  return val && val !== "start" ? ` from ${val}` : "";
+}
+
 const formatStep = (step: PathStep) => {
   if (step.type === "from") {
     const isDefault = step["fill-rule"] === "nonzero";
@@ -191,11 +231,11 @@ const formatStep = (step: PathStep) => {
   }
 
   if (step.type === "curve-quad") {
-    return `curve ${step.coorOpt || ""} ${unitCheck(step, "x")} ${unitCheck(step, "y")} with ${unitCheck(step, "cpx1")} ${unitCheck(step, "cpy1")}`.trim();
+    return `curve ${step.coorOpt} ${unitCheck(step, "x")} ${unitCheck(step, "y")} with ${unitCheck(step, "cpx1")} ${unitCheck(step, "cpy1")}${getOrigin(step, "cp1Origin")}`.trim();
   }
 
   if (step.type === "curve-cubic") {
-    return `curve ${step.coorOpt || ""} ${unitCheck(step, "x")} ${unitCheck(step, "y")} with ${unitCheck(step, "cpx1")} ${unitCheck(step, "cpy1")} / ${unitCheck(step, "cpx2")} ${unitCheck(step, "cpy2")}`.trim();
+    return `curve ${step.coorOpt} ${unitCheck(step, "x")} ${unitCheck(step, "y")} with ${unitCheck(step, "cpx1")} ${unitCheck(step, "cpy1")}${getOrigin(step, "cp1Origin")} / ${unitCheck(step, "cpx2")} ${unitCheck(step, "cpy2")}${getOrigin(step, "cp2Origin")}`.trim();
   }
 
   if (step.type === "arc") {
@@ -210,7 +250,7 @@ const formatStep = (step: PathStep) => {
 
   if (step.type.startsWith("smooth")) {
     if (step.cpx2) {
-      return `smooth ${step.coorOpt || ""} ${unitCheck(step, "x")} ${unitCheck(step, "y")} with ${unitCheck(step, "cpx2")} ${unitCheck(step, "cpy2")}`.trim();
+      return `smooth ${step.coorOpt} ${unitCheck(step, "x")} ${unitCheck(step, "y")} with ${unitCheck(step, "cpx2")} ${unitCheck(step, "cpy2")}${getOrigin(step, "cp2Origin")}`.trim();
     }
     return `smooth ${step.coorOpt || ""} ${unitCheck(step, "x")} ${unitCheck(step, "y")}`.trim();
   }
@@ -389,7 +429,7 @@ const App = () => {
 
   const handleCommandChange = (value: string) => {
     setSelectedCommand(value);
-    setEditingIndex(null);
+    // setEditingIndex(null);
     setFormValues({});
     setFormUnits({});
   };

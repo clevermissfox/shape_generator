@@ -677,6 +677,7 @@ const App = () => {
             <select
               id="select-command"
               value={selectedCommand}
+              disabled={editingIndex === 0}
               onChange={(event) => handleCommandChange(event.target.value)}
             >
               {commandOptions}

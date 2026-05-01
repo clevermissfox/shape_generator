@@ -151,6 +151,7 @@
     background-color: var(--clr-surface-primary);
     border: var(--default-border);
     border-radius: var(--default-br, 0.25em);
+    box-shadow: var(--default-shadow);
     overflow: clip;
     max-block-size: 40vh;
     max-block-size: 40vb;

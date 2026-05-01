@@ -11,6 +11,7 @@
         var(--clr-neutral-0, oklch(100% 0 0))
     );
     --clr-accent-base: light-dark(oklch(64% 0.16 303), oklch(47% 0.23 6));
+    --clr-bg-body: linear-gradient(0deg, var(--clr-bg), var(--clr-surface-secondary));
     --ff-400: "Karla";
     --ff-700: "Jost";
 
